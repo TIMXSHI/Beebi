@@ -1,15 +1,16 @@
 const express = require('express');
-const cors = require('cors')
+const cors = require('cors');
 const sql = require('mssql');
-//const bodyParser = require('body-parser');
 
 const app = express();
 
-//app.use(bodyParser.json());
+app.use(express.json());  // ✅ Parses incoming JSON
 app.use(cors());
+
+// ✅ Azure SQL config
 const config = {
-    user: 'jeromexshi', // e.g., your Azure SQL admin username
-    password: '%Jumpswim123', // NEVER expose in public repos
+    user: 'jeromexshi',
+    password: '%Jumpswim123',
     server: 'beebi.database.windows.net',
     database: 'beebi',
     options: {
@@ -18,35 +19,43 @@ const config = {
     }
 };
 
-// Connect to the Database
+// ✅ Connect to the database once on startup
 const connectToDatabase = async () => {
     try {
         await sql.connect(config);
-        console.log('Connected to the database successfully');
+        console.log('✅ Connected to the database successfully');
     } catch (err) {
-        console.error('Database connection failed', err);
-        process.exit(1); // Stop the application if the database connection fails
+        console.error('❌ Database connection failed', err);
+        process.exit(1);
     }
 };
 
 connectToDatabase();
 
+// ✅ Test GET route for browser check
+app.get('/', (req, res) => {
+    res.send('🚀 Beebi backend is alive!');
+});
 
+// ✅ Register route
 app.post('/register', async (req, res) => {
     const { email, password, full_name, baby_name } = req.body;
 
+    console.log('📥 Received /register request:', req.body); // Debug log
+
     try {
-        await sql.connect(config);
         await sql.query`
             INSERT INTO Customer (email, password, full_name, baby_name)
             VALUES (${email}, ${password}, ${full_name}, ${baby_name})`;
 
+        console.log('✅ Inserted record for:', email);
         res.status(200).json({ message: 'Registered successfully!' });
     } catch (err) {
-        console.error(err);
+        console.error('❌ Registration failed:', err);
         res.status(500).json({ error: 'Registration failed.' });
     }
 });
 
+// ✅ Use Azure-assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
