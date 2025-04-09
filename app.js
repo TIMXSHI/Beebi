@@ -43,7 +43,14 @@ app.post('/register', async (req, res) => {
 
     console.log('📥 Received /register request:', req.body); // Debug log
 
-    try {
+  try {
+        // ✅ Check if email is already used
+        const result = await sql.query`SELECT * FROM Customer WHERE email = ${email}`;
+        if (result.recordset.length > 0) {
+            return res.status(409).json({ error: 'Email has already been registered.' });
+        }
+
+        // ✅ Insert new customer
         await sql.query`
             INSERT INTO Customer (email, password, full_name, baby_name)
             VALUES (${email}, ${password}, ${full_name}, ${baby_name})`;
@@ -52,10 +59,9 @@ app.post('/register', async (req, res) => {
         res.status(200).json({ message: 'Registered successfully!' });
     } catch (err) {
         console.error('❌ Registration failed:', err);
-        res.status(500).json({ error: 'Registration failed.' });
+        res.status(500).json({ error: 'Registration failed. Please try again later.' });
     }
 });
-
 // ✅ Use Azure-assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
