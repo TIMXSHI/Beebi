@@ -86,6 +86,30 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// ✅ Add activity
+app.post('/add-Sleep-activity', async (req, res) => {
+    const { customer_id, start_time, end_time } = req.body;
+
+    if (!customer_id || !start_time || !end_time) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const start = new Date(start_time);
+        const end = new Date(end_time);
+        const duration = Math.floor((end - start) / 60000); // minutes
+
+        await sql.query`
+            INSERT INTO Activity (CustomerID, Type, StartTime, EndTime, Duration)
+            VALUES (${customer_id}, 'Sleep', ${start}, ${end}, ${duration})`;
+
+        res.status(200).json({ message: 'Sleep Activity recorded successfully' });
+    } catch (err) {
+        console.error('❌ Failed to insert activity:', err);
+        res.status(500).json({ error: 'Failed to insert Sleep activity' });
+    }
+});
+
 
 // ✅ Use Azure-assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
