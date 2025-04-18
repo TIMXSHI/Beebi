@@ -90,7 +90,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// ✅ Add activity
+// ✅ Add sleep activity
 app.post('/add-Sleep-activity', async (req, res) => {
     const { customer_id, start_time, end_time } = req.body;
 
@@ -111,6 +111,39 @@ app.post('/add-Sleep-activity', async (req, res) => {
     } catch (err) {
         console.error('❌ Failed to insert activity:', err);
         res.status(500).json({ error: 'Failed to insert Sleep activity' });
+    }
+});
+
+// ✅ Fetch activity
+app.get('/fetch-activity', async (req, res) => {
+    const customerId = req.query.customer_id;
+
+    if (!customerId) {
+        return res.status(400).json({ error: 'Missing customer_id parameter' });
+    }
+
+    try {
+        const result = await sql.query`
+            SELECT 
+                ActivityID,
+                CustomerID,
+                Type,
+                StartTime,
+                EndTime,
+                Duration,
+                StartCondition,
+                StartLocation,
+                EndCondition,
+                Notes
+            FROM Activity
+            WHERE CustomerID = ${customerId}
+            ORDER BY StartTime DESC
+        `;
+
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        console.error('❌ Failed to fetch activity data:', err);
+        res.status(500).json({ error: 'Failed to fetch activity data' });
     }
 });
 
