@@ -77,11 +77,13 @@ app.post('/login', async (req, res) => {
             console.log('❌ Login failed:', email);
             return res.status(401).json({ error: 'Wrong email or password' });
         }
-
+        const user = result.recordset[0]; 
         console.log('✅ Login success:', email);
-        res.status(200).json({ message: 'Login successful!',
-                              customer_id: user.customer_id,
-            baby_name: user.baby_name });
+        res.status(200).json({ 
+            message: 'Login successful!',
+            customer_id: user.customer_id,
+            baby_name: user.baby_name
+        });
     } catch (err) {
         console.error('❌ Login error:', err);
         res.status(500).json({ error: 'Login failed. Please try again.' });
