@@ -114,6 +114,49 @@ app.post('/add-Sleep-activity', async (req, res) => {
     }
 });
 
+
+// ✅ Add Feed Activity
+app.post('/add-feed-activity', async (req, res) => {
+    const { customer_id, start_time, milk_type, amount } = req.body;
+
+    if (!customer_id || !start_time || !milk_type || !amount) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await sql.query`
+            INSERT INTO Activity (
+                CustomerID,
+                Type,
+                StartTime,
+                StartCondition,
+                StartLocation,
+                EndCondition,
+                EndTime,
+                Duration,
+                Notes
+            )
+            VALUES (
+                ${customer_id},
+                'Feed',
+                ${start_time},
+                ${milk_type},
+                'Bottle',
+                ${amount + 'ml'},
+                NULL,
+                NULL,
+                NULL
+            )
+        `;
+
+        res.status(200).json({ message: 'Feed activity recorded successfully' });
+    } catch (err) {
+        console.error('❌ Failed to insert feed activity:', err);
+        res.status(500).json({ error: 'Failed to insert feed activity' });
+    }
+});
+
+
 // ✅ Fetch activity
 app.get('/fetch-activity', async (req, res) => {
     const customerId = req.query.customer_id;
