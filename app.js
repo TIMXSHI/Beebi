@@ -156,6 +156,46 @@ app.post('/add-feed-activity', async (req, res) => {
     }
 });
 
+// ✅ Add Diaper Activity
+app.post('/add-diaper-activity', async (req, res) => {
+    const { customer_id, start_time, end_condition } = req.body;
+
+    if (!customer_id || !start_time || !end_condition) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await sql.query`
+            INSERT INTO Activity (
+                CustomerID,
+                Type,
+                StartTime,
+                StartCondition,
+                StartLocation,
+                EndCondition,
+                EndTime,
+                Duration,
+                Notes
+            )
+            VALUES (
+                ${customer_id},
+                'Diaper',
+                ${start_time},
+                NULL,
+                NULL,
+                ${end_condition},
+                NULL,
+                NULL,
+                NULL
+            )
+        `;
+
+        res.status(200).json({ message: 'Diaper activity recorded successfully' });
+    } catch (err) {
+        console.error('❌ Failed to insert diaper activity:', err);
+        res.status(500).json({ error: 'Failed to insert diaper activity' });
+    }
+});
 
 // ✅ Fetch activity
 app.get('/fetch-activity', async (req, res) => {
