@@ -197,6 +197,54 @@ app.post('/add-diaper-activity', async (req, res) => {
     }
 });
 
+
+// ✅ Add Pumping Activity
+app.post('/add-pumping-activity', async (req, res) => {
+    const { customer_id, start_time, duration, left, right } = req.body;
+
+    if (!customer_id || !start_time || !duration || left === undefined || right === undefined) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const start = new Date(start_time);
+        const end = new Date(start.getTime() + duration * 60000); // Add minutes
+
+        await sql.query`
+            INSERT INTO Activity (
+                CustomerID,
+                Type,
+                StartTime,
+                Duration,
+                EndTime,
+                StartCondition,
+                EndCondition,
+                StartLocation,
+                Notes
+            )
+            VALUES (
+                ${customer_id},
+                'Pump',
+                ${start.toISOString()},
+                ${duration},
+                ${end.toISOString()},
+                ${left + 'ml'},
+                ${right + 'ml'},
+                NULL,
+                NULL
+            )
+        `;
+
+        res.status(200).json({ message: '✅ Pumping activity recorded successfully' });
+    } catch (err) {
+        console.error('❌ Failed to insert pumping activity:', err);
+        res.status(500).json({ error: 'Failed to insert pumping activity' });
+    }
+});
+
+
+
+
 // ✅ Fetch activity
 app.get('/fetch-activity', async (req, res) => {
     const customerId = req.query.customer_id;
