@@ -330,6 +330,35 @@ app.post('/update-feed-activity', async (req, res) => {
     }
 });
 
+// ✅ Update Diaper Activity
+app.post('/update-diaper-activity', async (req, res) => {
+    const { activity_id, customer_id, start_time, end_condition } = req.body;
+
+    if (!activity_id || !customer_id || !start_time || !end_condition) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const result = await sql.query`
+            UPDATE Activity
+            SET
+                CustomerID = ${customer_id},
+                StartTime = ${start_time},
+                EndCondition = ${end_condition}
+            WHERE ActivityID = ${activity_id}
+              AND Type = 'Diaper'
+        `;
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ error: 'Diaper activity not found or not updated' });
+        }
+
+        res.status(200).json({ message: 'Diaper activity updated successfully' });
+    } catch (err) {
+        console.error('❌ Failed to update diaper activity:', err);
+        res.status(500).json({ error: 'Failed to update diaper activity' });
+    }
+});
 
 
 
