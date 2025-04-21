@@ -242,9 +242,6 @@ app.post('/add-pumping-activity', async (req, res) => {
     }
 });
 
-
-
-
 // ✅ Fetch activity
 app.get('/fetch-activity', async (req, res) => {
     const customerId = req.query.customer_id;
@@ -275,6 +272,56 @@ app.get('/fetch-activity', async (req, res) => {
     } catch (err) {
         console.error('❌ Failed to fetch activity data:', err);
         res.status(500).json({ error: 'Failed to fetch activity data' });
+    }
+});
+
+// ✅ Update sleep activity
+app.post('/update-sleep-activity', async (req, res) => {
+    const { activity_id, customer_id, start_time, end_time } = req.body;
+
+    if (!activity_id || !customer_id || !start_time || !end_time) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const start = new Date(start_time);
+        const end = new Date(end_time);
+        const duration = Math.floor((end - start) / 60000); // minutes
+
+        await sql.query`
+            UPDATE Activity
+            SET StartTime = ${start}, EndTime = ${end}, Duration = ${duration}
+            WHERE ActivityID = ${activity_id} AND CustomerID = ${customer_id} AND Type = 'Sleep'
+        `;
+
+        res.status(200).json({ message: '✅ Sleep activity updated successfully' });
+    } catch (err) {
+        console.error('❌ Failed to update activity:', err);
+        res.status(500).json({ error: 'Failed to update Sleep activity' });
+    }
+});
+
+// 🗑️ Delete activity
+app.delete('/delete-activity/:activity_id', async (req, res) => {
+    const { activity_id } = req.params;
+
+    if (!activity_id) {
+        return res.status(400).json({ error: 'Missing activity_id' });
+    }
+
+    try {
+        const result = await sql.query`
+            DELETE FROM Activity WHERE ActivityID = ${activity_id}
+        `;
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ error: 'Activity not found' });
+        }
+
+        res.status(200).json({ message: '🗑️ Activity deleted successfully' });
+    } catch (err) {
+        console.error('❌ Failed to delete activity:', err);
+        res.status(500).json({ error: 'Failed to delete activity' });
     }
 });
 
