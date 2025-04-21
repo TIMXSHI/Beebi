@@ -301,6 +301,39 @@ app.post('/update-sleep-activity', async (req, res) => {
     }
 });
 
+// ✅ Update feed activity
+app.post('/update-feed-activity', async (req, res) => {
+    const { activity_id, customer_id, start_time, milk_type, amount } = req.body;
+
+    if (!activity_id || !customer_id || !start_time || !milk_type || !amount) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const start = new Date(start_time);
+
+        await sql.query`
+            UPDATE Activity
+            SET 
+                CustomerID = ${customer_id},
+                Type = 'Feed',
+                StartTime = ${start},
+                StartCondition = ${milk_type},
+                EndCondition = ${amount}
+            WHERE ActivityID = ${activity_id}
+        `;
+
+        res.status(200).json({ message: '✅ Feed activity updated successfully' });
+    } catch (err) {
+        console.error('❌ Failed to update feed activity:', err);
+        res.status(500).json({ error: 'Failed to update feed activity' });
+    }
+});
+
+
+
+
+
 // 🗑️ Delete activity
 app.delete('/delete-activity/:activity_id', async (req, res) => {
     const { activity_id } = req.params;
