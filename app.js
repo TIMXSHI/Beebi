@@ -360,7 +360,36 @@ app.post('/update-diaper-activity', async (req, res) => {
     }
 });
 
+// ✅ Update Pumping Activity
+app.post('/update-pumping-activity', async (req, res) => {
+    const { activity_id, customer_id, start_time, duration, left, right } = req.body;
 
+    if (!activity_id || !customer_id || !start_time || !duration || left === undefined || right === undefined) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        const start = new Date(start_time);
+        const end = new Date(start.getTime() + duration * 60000); // Add minutes
+
+        await sql.query`
+            UPDATE Activity
+            SET
+                CustomerID = ${customer_id},
+                StartTime = ${start.toISOString()},
+                Duration = ${duration},
+                EndTime = ${end.toISOString()},
+                StartCondition = ${left + 'ml'},
+                EndCondition = ${right + 'ml'}
+            WHERE ActivityID = ${activity_id} AND Type = 'Pump'
+        `;
+
+        res.status(200).json({ message: '✅ Pumping activity updated successfully' });
+    } catch (err) {
+        console.error('❌ Failed to update pumping activity:', err);
+        res.status(500).json({ error: 'Failed to update pumping activity' });
+    }
+});
 
 
 // 🗑️ Delete activity
