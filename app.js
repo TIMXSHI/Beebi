@@ -416,6 +416,62 @@ app.delete('/delete-activity/:activity_id', async (req, res) => {
     }
 });
 
+// ✅ Sync sleep timer (insert or update)
+app.post('/sync-sleep-timer', async (req, res) => {
+    const { customer_id, child_name, start_time } = req.body;
+
+    if (!customer_id || !child_name || !start_time) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        await sql.query`
+            MERGE SleepTimer AS target
+            USING (SELECT ${customer_id} AS CustomerID, ${child_name} AS ChildName) AS source
+            ON (target.CustomerID = source.CustomerID AND target.ChildName = source.ChildName)
+            WHEN MATCHED THEN
+                UPDATE SET StartTime = ${start_time}
+            WHEN NOT MATCHED THEN
+                INSERT (CustomerID, ChildName, StartTime)
+                VALUES (${customer_id}, ${child_name}, ${start_time});
+        `;
+
+        res.status(200).json({ message: '✅ Sleep timer synced successfully' });
+    } catch (err) {
+        console.error('❌ Failed to sync sleep timer:', err);
+        res.status(500).json({ error: 'Failed to sync sleep timer' });
+    }
+});
+
+// ✅ Fetch synced sleep timer
+app.get('/get-sleep-timer', async (req, res) => {
+    const { customer_id, child_name } = req.query;
+
+    if (!customer_id || !child_name) {
+        return res.status(400).json({ error: 'Missing query parameters' });
+    }
+
+    try {
+        const result = await sql.query`
+            SELECT StartTime FROM SleepTimer
+            WHERE CustomerID = ${customer_id} AND ChildName = ${child_name}
+        `;
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ error: 'No timer found for this user and child' });
+        }
+
+        const startTime = result.recordset[0].StartTime;
+
+        res.status(200).json({ start_time: startTime });
+    } catch (err) {
+        console.error('❌ Failed to fetch sleep timer:', err);
+        res.status(500).json({ error: 'Failed to fetch sleep timer' });
+    }
+});
+
+
+
 
 // ✅ Use Azure-assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
