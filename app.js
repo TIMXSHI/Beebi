@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const sql = require('mssql');
-const moment = require("moment-timezone");
 
 const app = express();
 
@@ -449,41 +448,43 @@ app.post('/sync-sleep-timer', async (req, res) => {
   }
 });
 
-app.get("/get-sleep-timer", async (req, res) => {
+const moment = require("moment-timezone");
+
+app.get('/get-sleep-timer', async (req, res) => {
   const { customer_id, child_name } = req.query;
 
   if (!customer_id || !child_name) {
-    return res.status(400).json({ error: "Missing customer_id or child_name" });
+    return res.status(400).json({ error: 'Missing query parameters' });
   }
 
   try {
-    const pool = await sql.connect();
-    const result = await pool
-      .request()
-      .input("customer_id", sql.Int, customer_id)
-      .input("child_name", sql.NVarChar, child_name)
-      .query(
-        `SELECT start_time, is_running, is_paused, paused_duration FROM SleepTimer WHERE customer_id = @customer_id AND child_name = @child_name`
-      );
+    await sql.connect(config);
+
+    const result = await sql.query`
+      SELECT * FROM SleepTimer
+      WHERE customer_id = ${customer_id} AND child_name = ${child_name}
+    `;
 
     if (result.recordset.length === 0) {
-      return res.status(200).json({});
+      return res.json({});
     }
 
-    const row = result.recordset[0];
-    const localStartTime = moment(row.start_time)
-      .tz("Australia/Brisbane")
-      .format("YYYY-MM-DD HH:mm:ss");
+    const timer = result.recordset[0];
+
+    // ✅ Convert UTC → Brisbane local time string
+    const localStartTime = timer.start_time
+      ? moment(timer.start_time).tz("Australia/Brisbane").format("YYYY-MM-DD HH:mm:ss")
+      : null;
 
     res.json({
-      start_time: localStartTime,
-      is_running: row.is_running === true || row.is_running === 1,
-      is_paused: row.is_paused === true || row.is_paused === 1,
-      paused_duration: row.paused_duration || 0,
+      start_time: localStartTime, // ✅ no 'Z'
+      is_running: !!timer.is_running,
+      is_paused: !!timer.is_paused,
+      paused_duration: timer.paused_duration
     });
   } catch (err) {
-    console.error("Error fetching sleep timer:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch timer' });
   }
 });
 
@@ -509,16 +510,6 @@ app.delete('/clear-sleep-timer', async (req, res) => {
     res.status(500).json({ error: 'Failed to clear timer' });
   }
 });
-
-
-
-
-
-
-
-
-
-
 
 
 
