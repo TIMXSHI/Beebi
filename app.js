@@ -473,7 +473,7 @@ app.get('/get-sleep-timer', async (req, res) => {
 
     // ✅ Convert UTC → Brisbane local time string
     const localStartTime = timer.start_time
-      ? moment.utc(timer.start_time).tz("Australia/Brisbane").format("YYYY-MM-DD HH:mm:ss")
+      ? moment(timer.start_time).format("YYYY-MM-DD HH:mm:ss")
       : null;
 
     res.json({
