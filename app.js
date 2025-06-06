@@ -88,7 +88,7 @@ app.post('/login', async (req, res) => {
             customer_id: user.customer_id,
             baby_name: user.baby_name,
             gender: user.gender,
-            dob: user.dob
+            dob: user.date_of_birth 
         });
     } catch (err) {
         console.error('❌ Login error:', err);
