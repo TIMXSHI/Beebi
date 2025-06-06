@@ -37,13 +37,17 @@ app.get('/', (req, res) => {
     res.send('🚀 Beebi backend is alive!');
 });
 
-// ✅ Register route
 app.post('/register', async (req, res) => {
-    const { email, password, full_name, baby_name } = req.body;
+    const { email, password, full_name, baby_name, gender, dob } = req.body;
 
     console.log('📥 Received /register request:', req.body); // Debug log
 
-  try {
+    // 🔒 Validate required fields
+    if (!email || !password || !full_name || !baby_name || !gender || !dob) {
+        return res.status(400).json({ error: 'Missing required fields.' });
+    }
+
+    try {
         // ✅ Check if email is already used
         const result = await sql.query`SELECT * FROM Customer WHERE email = ${email}`;
         if (result.recordset.length > 0) {
