@@ -86,7 +86,9 @@ app.post('/login', async (req, res) => {
         res.status(200).json({ 
             message: 'Login successful!',
             customer_id: user.customer_id,
-            baby_name: user.baby_name
+            baby_name: user.baby_name,
+            gender: user.gender,
+            dob: user.dob
         });
     } catch (err) {
         console.error('❌ Login error:', err);
