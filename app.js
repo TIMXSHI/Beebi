@@ -52,8 +52,8 @@ app.post('/register', async (req, res) => {
 
         // ✅ Insert new customer
         await sql.query`
-            INSERT INTO Customer (email, password, full_name, baby_name)
-            VALUES (${email}, ${password}, ${full_name}, ${baby_name})`;
+            INSERT INTO Customer (email, password, full_name, baby_name, gender, date_of_birth)
+            VALUES (${email}, ${password}, ${full_name}, ${baby_name}, ${gender}, ${dob})`;
 
         console.log('✅ Inserted record for:', email);
         res.status(200).json({ message: 'Registered successfully!' });
