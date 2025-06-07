@@ -556,6 +556,31 @@ app.post('/add-growth-record', async (req, res) => {
     }
 });
 
+// 📌 GET /get-growth-records?customer_id=10
+app.get('/get-growth-records', async (req, res) => {
+    const customerId = req.query.customer_id;
+    if (!customerId) {
+        return res.status(400).json({ error: 'Missing customer_id' });
+    }
+
+    try {
+        const result = await sql.query`
+            SELECT RecordDate, Weight, Height, Head, 
+                   Weight_Percentage, Height_Percentage, Head_Percentage
+            FROM dbo.Growth
+            WHERE CustomerID = ${customerId}
+            ORDER BY RecordDate DESC`;
+
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        console.error('❌ DB fetch error:', err);
+        res.status(500).json({ error: 'Failed to retrieve growth records' });
+    }
+});
+
+
+
+
 // ✅ Use Azure-assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
