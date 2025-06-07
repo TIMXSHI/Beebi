@@ -517,7 +517,44 @@ app.delete('/clear-sleep-timer', async (req, res) => {
   }
 });
 
+// ✅ Add growth record
+app.post('/add-growth-record', async (req, res) => {
+    const { customer_id, record_date, weight, height, head, weight_percentage, height_percentage, head_percentage } = req.body;
 
+    if (!customer_id || !record_date) {
+        return res.status(400).json({ error: 'Missing required fields: customer_id or record_date' });
+    }
+
+    try {
+        await sql.query`
+            INSERT INTO dbo.Growth (
+                CustomerID,
+                RecordDate,
+                Weight,
+                Height,
+                Head,
+                Weight_Percentage,
+                Height_Percentage,
+                Head_Percentage
+            )
+            VALUES (
+                ${customer_id},
+                ${new Date(record_date)},
+                ${weight},
+                ${height},
+                ${head},
+                ${weight_percentage},
+                ${height_percentage},
+                ${head_percentage}
+            )
+        `;
+
+        res.status(200).json({ message: '✅ Growth record inserted successfully' });
+    } catch (err) {
+        console.error('❌ Failed to insert growth record:', err);
+        res.status(500).json({ error: 'Failed to insert growth record' });
+    }
+});
 
 // ✅ Use Azure-assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
